@@ -7,14 +7,14 @@ namespace FPTBook.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ICategoryRepository CategoryRepository;
-        public CategoryController(ICategoryRepository categoryRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public CategoryController(IUnitOfWork categoryRepository)
         {
-            CategoryRepository = categoryRepository;
+            _unitOfWork = categoryRepository;
         }
         public IActionResult Index()
         {
-            List<Category> categories = CategoryRepository.GetAll().ToList();
+            List<Category> categories = _unitOfWork.CategoryRepository.GetAll().ToList();
             return View(categories);
         }
         public IActionResult Create()
@@ -31,8 +31,8 @@ namespace FPTBook.Controllers
             }
             if (ModelState.IsValid)
             {
-                CategoryRepository.Add(category);
-                CategoryRepository.Save();
+                _unitOfWork.CategoryRepository.Add(category);
+                _unitOfWork.Save();
                 TempData["success"] = "Category Created successfully";
                 return RedirectToAction("Index");
             }
@@ -44,7 +44,7 @@ namespace FPTBook.Controllers
             {
                 return NotFound();
             }
-            Category? category = CategoryRepository.Get(c => c.Id == id);
+            Category? category = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
             //category = _dbContext.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
@@ -57,8 +57,8 @@ namespace FPTBook.Controllers
         {
             if (ModelState.IsValid)
             {
-                CategoryRepository.Update(category);
-                CategoryRepository.Save();
+                _unitOfWork.CategoryRepository.Update(category);
+                _unitOfWork.Save();
                 TempData["success"] = "Category Updated successfully";
                 return RedirectToAction("Index");
             }
@@ -70,7 +70,7 @@ namespace FPTBook.Controllers
             {
                 return NotFound();
             }
-            Category? category = CategoryRepository.Get(c => c.Id == id);
+            Category? category = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
             if (category == null)
             {
                 return NotFound();
@@ -80,8 +80,8 @@ namespace FPTBook.Controllers
         [HttpPost]
         public IActionResult Delete(Category category)
         {
-            CategoryRepository.Delete(category);
-            CategoryRepository.Save();
+            _unitOfWork.CategoryRepository.Delete(category);
+            _unitOfWork.Save();
             TempData["success"] = "Category Deleted successfully";
             return RedirectToAction("Index");
         }

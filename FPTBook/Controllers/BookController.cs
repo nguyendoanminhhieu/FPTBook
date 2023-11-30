@@ -1,19 +1,20 @@
 ﻿using FPTBook.Data;
 using FPTBook.Models;
+using FPTBook.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTBook.Controllers
 {
     public class BookController : Controller
     {
-        private readonly ApplicationDBContext _dbContext;
-        public BookController(ApplicationDBContext dBContext)
+        private readonly IUnitOfWork _unitOfWork;
+        public BookController(IUnitOfWork unitOfWork)
         {
-            _dbContext = dBContext;
+            _unitOfWork = unitOfWork;
         }
         public IActionResult Index()
         {
-            List<Book> books = _dbContext.Books.ToList();
+            List<Book> books = _unitOfWork.BookRepository.GetAll().ToList();
             return View(books);
         }
         public IActionResult CreateUpdate(int? id)
@@ -27,7 +28,7 @@ namespace FPTBook.Controllers
             else
             {
                 //Update
-                book = _dbContext.Books.Find(id);
+                book = _unitOfWork.BookRepository.Get(b => b.Id == id);
                 return View(book);
             }
 
@@ -40,16 +41,16 @@ namespace FPTBook.Controllers
             {
                 if (book.Id == 0)
                 {
-                    _dbContext.Books.Add(book);
+                    _unitOfWork.BookRepository.Add(book);
                     TempData["success"] = "Book Created successfully";
                 }
                 else
                 {
-                    _dbContext.Books.Update(book);
+                    _unitOfWork.BookRepository.Update(book);
                     TempData["success"] = "Book Updated successfully";
                 }
 
-                _dbContext.SaveChanges();
+                _unitOfWork.Save();
                 return RedirectToAction("Index");
             }
             return View();
@@ -60,7 +61,7 @@ namespace FPTBook.Controllers
             {
                 return NotFound();
             }
-            Book? book = _dbContext.Books.Find(id);
+            Book? book = _unitOfWork.BookRepository.Get(b => b.Id == id);
             if (book == null)
             {
                 return NotFound();
@@ -70,8 +71,8 @@ namespace FPTBook.Controllers
         [HttpPost]
         public IActionResult Delete(Book book)
         {
-            _dbContext.Books.Remove(book);
-            _dbContext.SaveChanges();
+            _unitOfWork.BookRepository.Delete(book);
+            _unitOfWork.Save();
             TempData["success"] = "Book Deleted successfully";
             return RedirectToAction("Index");
         }
